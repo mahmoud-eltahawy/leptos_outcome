@@ -3,6 +3,7 @@
 
 use std::sync::Arc;
 
+use leptos::either::Either;
 use leptos::prelude::*;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
@@ -53,6 +54,7 @@ pub fn ResourceView<ResourceViewFn, ResourceValue, ViewValue, Props, Adapter, E>
     /// Optional loading fallback. Defaults to a spinner.
     #[prop(optional, into)]
     fallback: Option<ViewFn>,
+    #[prop(default = false)] suspense: bool,
 ) -> impl IntoView
 where
     ResourceValue: Serialize + DeserializeOwned + Clone + Send + Sync + 'static,
@@ -94,9 +96,17 @@ where
         }
     };
 
-    view! {
-        <Suspense fallback=fallback_closure>
-            {core}
-        </Suspense>
+    if suspense {
+        Either::Left(view! {
+            <Suspense fallback=fallback_closure>
+                {core}
+            </Suspense>
+        })
+    } else {
+        Either::Right(view! {
+            <Transition fallback=fallback_closure>
+                {core}
+            </Transition>
+        })
     }
 }
